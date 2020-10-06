@@ -2,98 +2,88 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using TestApp.Repository;
+using AutoMapper;
+using TestApp.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TestApp.Services
 {
     public class UserService : IUserService
     {
-        private bool IsValid(UserModel user)
+        private readonly IDbRepository _dbRepository;
+        private readonly IMapper _mapper;
+
+        public UserService(IDbRepository dbRepository, IMapper mapper)
         {
-            if (string.IsNullOrEmpty(user.Name))
+            _dbRepository = dbRepository;
+            _mapper = mapper;
+        }
+
+        public async Task<UserModel> Auth(UserModel user)
+        {
+            var entity = await _dbRepository.Get<UserEntity>().FirstOrDefaultAsync(x => x.Password == user.Password && x.Email == user.Email);
+
+            if (entity == null)
             {
-                return false;
+                return null;
             }
 
-            if (user.Password.Length < 8)
-            {
-                return false;
-            }
+            user.Email = entity.Email;
+            user.Password = entity.Password;
+            user.Name = entity.Name;
 
-            if (string.IsNullOrEmpty(user.Email))
-            {
-                return false;
-            }
-            return true;
+            return user;
         }
-        private int GetId(UserModel user)
+        public async Task<UserModel> Register(UserModel user)
         {
-            int result = _users.FindIndex(it => user == it);
+            var entity = new UserEntity();
+            entity.Email = user.Email;
+            entity.Password = user.Password;
+            entity.Name = user.Name;
 
-            return result;
-        }
-        private UsersData _users;
-        public UserService(UsersData users)
-        {
-            _users = users;
-        }
-        public UserModel Auth(UserModel user)
-        {
-            if (!IsValid(user) || GetId(user) == -1)
+            var result = await _dbRepository.Add(entity);
+            await _dbRepository.SaveChangesAsync();
+
+            if (result == null)
             {
                 return null;
             }
 
             return user;
         }
-
-        public UserModel Edit(UserModel user)
+        public async Task<string> Update(UserModel user)
         {
-            if (!IsValid(user))
+            var entity = await _dbRepository.Get<UserEntity>().FirstOrDefaultAsync(x => x.Password == user.Password && x.Email == user.Email);
+
+            if (entity == null)
             {
                 return null;
             }
 
-            int id = GetId(user);
+            entity.Email = user.Email;
+            entity.Password = user.Password;
+            entity.Name = user.Name;
 
-            if (id == -1)
-            {
-                return null;
-            }
+            await _dbRepository.Update(entity);
+            await _dbRepository.SaveChangesAsync();
 
-            _users[id] = user;
-
-            return user;
+            return "Successfully updated";
         }
-
-        public UserModel Delete(UserModel user)
+        public async Task<string> Delete(UserModel user)
         {
-            if (!IsValid(user))
+            var entity = await _dbRepository.Get<UserEntity>().FirstOrDefaultAsync(x => x.Password == user.Password && x.Email == user.Email);
+
+            if (entity == null)
             {
                 return null;
             }
 
-            int id = GetId(user);
+            await _dbRepository.Delete<UserEntity>(entity.Id);
+            await _dbRepository.SaveChangesAsync();
 
-            if (id == -1)
-            {
-                return null;
-            }
-
-            _users.Remove(user);
-
-            return user;
-        }
-
-        public UserModel Register(UserModel user)
-        {
-            if (!IsValid(user))
-            {
-                return null;
-            }
-
-            _users.Add(user);
-
-            return user;
+            return "Successfully deleted";
         }
     }
 }

@@ -7,9 +7,9 @@ namespace TestApp.Services
 {
     public interface IUserService
     {
-        UserModel Auth(UserModel user);
-        UserModel Register(UserModel user);
-        UserModel Edit(UserModel user);
-        UserModel Delete(UserModel user);
+        Task<UserModel> Auth(UserModel user);
+        Task<UserModel> Register(UserModel user);
+        Task<string> Update(UserModel user);
+        Task<string> Delete(UserModel user);
     }
 }

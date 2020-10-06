@@ -17,10 +17,10 @@ namespace TestApp.Controllers
             _userService = userService;
         }
 
-        [HttpGet]
-        public ActionResult<UserModel> Get(UserModel user)
+        [HttpPost("auth")]
+        public async Task<IActionResult> Auth(UserModel user)
         {
-            var result = _userService.Auth(user);
+            var result = await _userService.Auth(user);
 
             if (result == null)
             {
@@ -30,22 +30,23 @@ namespace TestApp.Controllers
             return Ok(result);
         }
 
-        [HttpPost]
-        public ActionResult<UserModel> Post(UserModel user)
+        [HttpPost("reg")]
+        public async Task<IActionResult> Register(UserModel user)
         {
-            var result = _userService.Register(user);
+            var result = await _userService.Register(user);
 
             if (result == null)
             {
                 return BadRequest("Register failed");
             }
+
             return Ok(result);
         }
 
         [HttpPut]
-        public ActionResult<UserModel> Put(UserModel user)
+        public async Task<IActionResult> Put(UserModel user)
         {
-            var result = _userService.Edit(user);
+            var result = await _userService.Update(user);
 
             if (result == null)
             {
@@ -55,15 +56,14 @@ namespace TestApp.Controllers
             return Ok(result);
         }
 
-        // DELETE api/<UserController>/5
         [HttpDelete]
-        public ActionResult<UserModel> Delete(UserModel user)
+        public async Task<IActionResult> Delete(UserModel user)
         {
-            var result = _userService.Delete(user);
+            var result = await _userService.Delete(user);
 
             if (result == null)
             {
-                return BadRequest("Edit failed");
+                return BadRequest("Delete failed");
             }
 
             return Ok(result);
